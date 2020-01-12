@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/fsufitch/testable-web-demo/db"
+	"github.com/fsufitch/wire-web-demo/db"
 )
 
 // CounterHandler is a handler that increments the counter and displays the new value

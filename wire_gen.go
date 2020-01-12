@@ -6,15 +6,11 @@
 package main
 
 import (
-	"github.com/fsufitch/testable-web-demo/app"
-	"github.com/fsufitch/testable-web-demo/config"
-	"github.com/fsufitch/testable-web-demo/db"
-	"github.com/fsufitch/testable-web-demo/web"
+	"github.com/fsufitch/wire-web-demo/app"
+	"github.com/fsufitch/wire-web-demo/config"
+	"github.com/fsufitch/wire-web-demo/db"
+	"github.com/fsufitch/wire-web-demo/web"
 	"github.com/google/wire"
-)
-
-import (
-	_ "github.com/lib/pq"
 )
 
 // Injectors from wire.go:
@@ -60,4 +56,4 @@ func InitializeApplicationRunFunc() (app.ApplicationRunFunc, func(), error) {
 
 // wire.go:
 
-var DefaultProviderSet = wire.NewSet(app.ApplicationProviderSet, config.EnvironmentProviderSet, db.PostgresDBProviderSet, web.DefaultWebProviderSet)
+var defaultProviderSet = wire.NewSet(app.ApplicationProviderSet, config.EnvironmentProviderSet, db.PostgresDBProviderSet, web.DefaultWebProviderSet)

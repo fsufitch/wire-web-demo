@@ -4,10 +4,10 @@
 package main
 
 import (
-	"github.com/fsufitch/testable-web-demo/app"
-	"github.com/fsufitch/testable-web-demo/config"
-	"github.com/fsufitch/testable-web-demo/db"
-	"github.com/fsufitch/testable-web-demo/web"
+	"github.com/fsufitch/wire-web-demo/app"
+	"github.com/fsufitch/wire-web-demo/config"
+	"github.com/fsufitch/wire-web-demo/db"
+	"github.com/fsufitch/wire-web-demo/web"
 	"github.com/google/wire"
 )
 

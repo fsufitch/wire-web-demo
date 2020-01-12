@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/fsufitch/testable-web-demo/web"
+	"github.com/fsufitch/wire-web-demo/web"
 )
 
 // ApplicationRunFunc is a plain function that runs an application and returns an error

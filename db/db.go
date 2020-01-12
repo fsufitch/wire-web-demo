@@ -4,7 +4,7 @@ import (
 	"context"
 	"database/sql"
 
-	"github.com/fsufitch/testable-web-demo/config"
+	"github.com/fsufitch/wire-web-demo/config"
 	_ "github.com/lib/pq" // inject PQ database driver
 )
 

@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/fsufitch/testable-web-demo/config"
+	"github.com/fsufitch/wire-web-demo/config"
 	"github.com/gorilla/mux"
 )
 
