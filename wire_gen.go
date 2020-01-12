@@ -6,6 +6,10 @@
 package main
 
 import (
+	"github.com/fsufitch/testable-web-demo/app"
+	"github.com/fsufitch/testable-web-demo/config"
+	"github.com/fsufitch/testable-web-demo/db"
+	"github.com/fsufitch/testable-web-demo/web"
 	"github.com/google/wire"
 )
 
@@ -15,23 +19,45 @@ import (
 
 // Injectors from wire.go:
 
-func InitializeMainProcess() (*MainProcess, error) {
-	injectableConfig := NewConfigFromEnvironment()
-	injectableDatabase, err := NewPQDatabase(injectableConfig)
+func InitializeApplicationRunFunc() (app.ApplicationRunFunc, func(), error) {
+	webPort, err := config.ProvideWebPortFromEnvironment()
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
-	injectableServer, err := NewDefaultServer(injectableConfig, injectableDatabase)
+	defaultUptimeHandler := web.ProvideDefaultUptimeHandler()
+	databaseString, err := config.ProvideDatabaseStringFromEnvironment()
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
-	mainProcess, err := NewMainProcess(injectableServer, injectableDatabase)
+	preInitPostgresDBConn, cleanup, err := db.ProvidePreInitPostgresDBConn(databaseString)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
-	return mainProcess, nil
+	postgresDBConn, err := db.ProvidePostgresDBConn(preInitPostgresDBConn)
+	if err != nil {
+		cleanup()
+		return nil, nil, err
+	}
+	postgresCounterDAO := &db.PostgresCounterDAO{
+		DB: postgresDBConn,
+	}
+	defaultCounterHandler := &web.DefaultCounterHandler{
+		CounterDAO: postgresCounterDAO,
+	}
+	handlers := web.Handlers{
+		Uptime:  defaultUptimeHandler,
+		Counter: defaultCounterHandler,
+	}
+	router := web.ProvideDefaultRouter(handlers)
+	serverRunFunc, cleanup2 := web.ProvideServerRunFunc(webPort, router)
+	interruptChannel := app.ProvideInterruptChannel()
+	applicationRunFunc := app.ProvideApplicationRunFunc(serverRunFunc, interruptChannel)
+	return applicationRunFunc, func() {
+		cleanup2()
+		cleanup()
+	}, nil
 }
 
 // wire.go:
 
-var DefaultProviderSet = wire.NewSet(NewDefaultServer, NewPQDatabase, NewMainProcess, NewConfigFromEnvironment)
+var DefaultProviderSet = wire.NewSet(app.ApplicationProviderSet, config.EnvironmentProviderSet, db.PostgresDBProviderSet, web.DefaultWebProviderSet)
