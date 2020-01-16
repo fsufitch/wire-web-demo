@@ -36,7 +36,7 @@ func (dao PostgresCounterDAO) Value(ctx context.Context) (int, error) {
 	if err := row.Scan(&value); err != nil {
 		return 0, err
 	}
-	return value, tx.Commit()
+	return value, tx.Rollback()
 }
 
 // Increment increases the counter and returns its new value

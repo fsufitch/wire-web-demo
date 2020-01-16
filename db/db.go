@@ -15,20 +15,29 @@ type PostgresDBConn *sql.DB
 // PreInitPostgresDBConn is a database connection to a Postgres DB which may not have initialized schema
 type PreInitPostgresDBConn *sql.DB
 
+var sqlOpen = sql.Open
+
 // ProvidePreInitPostgresDBConn provides a PostgresDBConn by connecting to a database
 func ProvidePreInitPostgresDBConn(logger *log.MultiLogger, dbString config.DatabaseString) (PreInitPostgresDBConn, func(), error) {
 	logger.Infof("connecting to postgres database")
-	db, err := sql.Open("postgres", string(dbString))
+	db, err := sqlOpen("postgres", string(dbString))
 	cleanup := func() { db.Close() }
 
 	if err != nil {
-		return nil, cleanup, err
+		return nil, nil, err
 	}
 	if err := db.Ping(); err != nil {
 		return nil, cleanup, err
 	}
 	return db, cleanup, nil
 }
+
+const setupTableQuery = `
+		CREATE TABLE IF NOT EXISTS counter (value int NOT NULL DEFAULT 0);
+		`
+const setupRowQuery = `
+		INSERT INTO counter (value)
+		SELECT 0 WHERE NOT EXISTS (SELECT * FROM counter);`
 
 // ProvidePostgresDBConn performs schema initialization
 func ProvidePostgresDBConn(logger *log.MultiLogger, db PreInitPostgresDBConn) (PostgresDBConn, error) {
@@ -39,13 +48,13 @@ func ProvidePostgresDBConn(logger *log.MultiLogger, db PreInitPostgresDBConn) (P
 		return nil, err
 	}
 
-	_, err = tx.Exec(`
-		CREATE TABLE IF NOT EXISTS counter (value int NOT NULL DEFAULT 0);
-		INSERT INTO counter (value)
-			SELECT 0 WHERE NOT EXISTS (SELECT * FROM counter);
-	`)
+	if _, err = tx.Exec(setupTableQuery); err != nil {
+	} else if _, err = tx.Exec(setupRowQuery); err != nil {
+	}
+
 	if err != nil {
 		return nil, err
 	}
+
 	return PostgresDBConn(db), tx.Commit()
 }
