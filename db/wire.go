@@ -4,7 +4,7 @@ import "github.com/google/wire"
 
 // ProvidePostgresCounterDAO is a provider set for building a PostgresCounterDAO
 var ProvidePostgresCounterDAO = wire.NewSet(
-	wire.Struct(new(PostgresCounterDAO), "DB"),
+	wire.Struct(new(PostgresCounterDAO), "DB", "Log"),
 	wire.Bind(new(CounterDAO), new(*PostgresCounterDAO)),
 )
 

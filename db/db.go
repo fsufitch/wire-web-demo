@@ -5,6 +5,7 @@ import (
 	"database/sql"
 
 	"github.com/fsufitch/wire-web-demo/config"
+	"github.com/fsufitch/wire-web-demo/log"
 	_ "github.com/lib/pq" // inject PQ database driver
 )
 
@@ -15,7 +16,8 @@ type PostgresDBConn *sql.DB
 type PreInitPostgresDBConn *sql.DB
 
 // ProvidePreInitPostgresDBConn provides a PostgresDBConn by connecting to a database
-func ProvidePreInitPostgresDBConn(dbString config.DatabaseString) (PreInitPostgresDBConn, func(), error) {
+func ProvidePreInitPostgresDBConn(logger *log.MultiLogger, dbString config.DatabaseString) (PreInitPostgresDBConn, func(), error) {
+	logger.Infof("connecting to postgres database")
 	db, err := sql.Open("postgres", string(dbString))
 	cleanup := func() { db.Close() }
 
@@ -29,7 +31,8 @@ func ProvidePreInitPostgresDBConn(dbString config.DatabaseString) (PreInitPostgr
 }
 
 // ProvidePostgresDBConn performs schema initialization
-func ProvidePostgresDBConn(db PreInitPostgresDBConn) (PostgresDBConn, error) {
+func ProvidePostgresDBConn(logger *log.MultiLogger, db PreInitPostgresDBConn) (PostgresDBConn, error) {
+	logger.Infof("initializing db schema")
 	tx, err := (*sql.DB)(db).BeginTx(context.Background(), nil)
 	defer tx.Rollback()
 	if err != nil {

@@ -6,4 +6,6 @@ import "github.com/google/wire"
 var EnvironmentProviderSet = wire.NewSet(
 	ProvideDatabaseStringFromEnvironment,
 	ProvideWebPortFromEnvironment,
+	ProvideDebugModeFromEnvironment,
+	ProvideInitTimeFromCurrentTime,
 )

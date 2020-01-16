@@ -9,6 +9,7 @@ import (
 	"github.com/fsufitch/wire-web-demo/app"
 	"github.com/fsufitch/wire-web-demo/config"
 	"github.com/fsufitch/wire-web-demo/db"
+	"github.com/fsufitch/wire-web-demo/log"
 	"github.com/fsufitch/wire-web-demo/web"
 	"github.com/google/wire"
 )
@@ -16,39 +17,55 @@ import (
 // Injectors from wire.go:
 
 func InitializeApplicationRunFunc() (app.ApplicationRunFunc, func(), error) {
+	debugMode, err := config.ProvideDebugModeFromEnvironment()
+	if err != nil {
+		return nil, nil, err
+	}
+	multiLogger, cleanup := log.ProvideStdOutErrMultiLogger(debugMode)
 	webPort, err := config.ProvideWebPortFromEnvironment()
-	if err != nil {
-		return nil, nil, err
-	}
-	defaultUptimeHandler := web.ProvideDefaultUptimeHandler()
-	databaseString, err := config.ProvideDatabaseStringFromEnvironment()
-	if err != nil {
-		return nil, nil, err
-	}
-	preInitPostgresDBConn, cleanup, err := db.ProvidePreInitPostgresDBConn(databaseString)
-	if err != nil {
-		return nil, nil, err
-	}
-	postgresDBConn, err := db.ProvidePostgresDBConn(preInitPostgresDBConn)
 	if err != nil {
 		cleanup()
 		return nil, nil, err
 	}
+	initTime := config.ProvideInitTimeFromCurrentTime()
+	defaultUptimeHandler := &web.DefaultUptimeHandler{
+		InitTime: initTime,
+		Logger:   multiLogger,
+	}
+	databaseString, err := config.ProvideDatabaseStringFromEnvironment()
+	if err != nil {
+		cleanup()
+		return nil, nil, err
+	}
+	preInitPostgresDBConn, cleanup2, err := db.ProvidePreInitPostgresDBConn(multiLogger, databaseString)
+	if err != nil {
+		cleanup()
+		return nil, nil, err
+	}
+	postgresDBConn, err := db.ProvidePostgresDBConn(multiLogger, preInitPostgresDBConn)
+	if err != nil {
+		cleanup2()
+		cleanup()
+		return nil, nil, err
+	}
 	postgresCounterDAO := &db.PostgresCounterDAO{
-		DB: postgresDBConn,
+		DB:  postgresDBConn,
+		Log: multiLogger,
 	}
 	defaultCounterHandler := &web.DefaultCounterHandler{
 		CounterDAO: postgresCounterDAO,
+		Logger:     multiLogger,
 	}
 	handlers := web.Handlers{
 		Uptime:  defaultUptimeHandler,
 		Counter: defaultCounterHandler,
 	}
 	router := web.ProvideDefaultRouter(handlers)
-	serverRunFunc, cleanup2 := web.ProvideServerRunFunc(webPort, router)
+	serverRunFunc, cleanup3 := web.ProvideServerRunFunc(multiLogger, webPort, router)
 	interruptChannel := app.ProvideInterruptChannel()
-	applicationRunFunc := app.ProvideApplicationRunFunc(serverRunFunc, interruptChannel)
+	applicationRunFunc := app.ProvideApplicationRunFunc(multiLogger, serverRunFunc, interruptChannel)
 	return applicationRunFunc, func() {
+		cleanup3()
 		cleanup2()
 		cleanup()
 	}, nil
@@ -56,4 +73,4 @@ func InitializeApplicationRunFunc() (app.ApplicationRunFunc, func(), error) {
 
 // wire.go:
 
-var defaultProviderSet = wire.NewSet(app.ApplicationProviderSet, config.EnvironmentProviderSet, db.PostgresDBProviderSet, web.DefaultWebProviderSet)
+var defaultProviderSet = wire.NewSet(app.ApplicationProviderSet, config.EnvironmentProviderSet, db.PostgresDBProviderSet, log.StdOutErrMultiLoggerProviderSet, web.DefaultWebProviderSet)
