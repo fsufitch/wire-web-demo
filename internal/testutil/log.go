@@ -6,6 +6,8 @@ import (
 	customlog "github.com/fsufitch/wire-web-demo/log"
 )
 
+type Foo interface{}
+
 // HeadlessLogOutput is an io.Writer that writes to an array of strings
 type HeadlessLogOutput struct {
 	linesPtr *[]string

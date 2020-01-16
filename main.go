@@ -6,7 +6,6 @@ import (
 )
 
 func main() {
-
 	if runApp, cleanup, err := InitializeApplicationRunFunc(); err != nil {
 		fmt.Fprintf(os.Stderr, "Error during dependency injection: %v", err)
 		os.Exit(1)

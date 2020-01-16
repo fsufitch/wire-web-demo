@@ -120,7 +120,7 @@ func ProvideStdOutErrMultiLogger(debugMode config.DebugMode) (*MultiLogger, func
 		PrintLevel:  stdOutLevel,
 		ErrorLevel:  stdErrLevel,
 		PrintLogger: log.New(os.Stdout, "", flags),
-		ErrorLogger: log.New(os.Stdout, "", flags),
+		ErrorLogger: log.New(os.Stderr, "", flags),
 	}
 
 	logger.Infof("initialized logging")
