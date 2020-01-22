@@ -6,7 +6,9 @@ It is built using Go, Postgres, and structured using dependency injection via
 
 **Buy why though?** Because it serves as a good example for the future, for myself and others. The
 DI "modules" (config, log, db, etc) are fully-fledged and feature good unit testing and environment-based 
-setup. They are ready to be copy-pasted to other projects, or used as reference points
+setup. They are ready to be copy-pasted to other projects, or used as reference points.
+
+Some rationale and discussion behind how/why this was put together can be found [in a blog post here](https://medium.com/@fsufitch/dependency-injection-and-testability-in-a-go-webservice-a91d0e5469dd).
 
 ## Setup and running
 
