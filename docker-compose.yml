@@ -1,0 +1,16 @@
+version: '3'
+services:
+    web:
+        build: .
+        env_file: 
+            - ".env"
+        ports:
+            - "9999:8080"
+        depends_on:
+            - "db"
+    db:
+        image: "postgres:12"
+        environment: 
+            POSTGRES_USER: postgres
+            POSTGRES_PASSWORD: secret
+            POSTGRES_DB: demo
